@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Real-Time MMO Minesweeper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <header class="header">
+      <div class="header-left">
+        <h1 class="logo">MMO Minesweeper</h1>
+        <div class="mode-toggle-group" id="modeToggleGroup">
+          <button id="digModeBtn" class="mode-btn active" type="button">⛏️ Dig Mode</button>
+          <button id="flagModeBtn" class="mode-btn" type="button">🚩 Flag Mode</button>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="timer-box">
+          <span class="timer-label">Time Remaining</span>
+          <span id="timerValue" class="timer-value">10:00</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div id="playerBadge" class="player-badge">
+          <span id="playerName" class="player-name">Guest</span>
+          <span id="playerScore" class="player-score">0 pts</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="board-wrapper" id="boardWrapper">
+        <div id="board" class="board"></div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <h2 class="panel-title">Live Leaderboard</h2>
+          <div id="leaderboardList" class="leaderboard-list">
+            <div class="empty-state">Waiting for players...</div>
+          </div>
+        </div>
+
+        <div class="panel past-champions-panel">
+          <h2 class="panel-title">Previous Round Champions</h2>
+          <div id="pastChampionsList" class="champions-list">
+            <div class="empty-state">No previous rounds yet</div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="nicknameModal" class="modal-backdrop">
+    <div class="modal-card">
+      <h2 class="modal-title">Join MMO Minesweeper</h2>
+      <p class="modal-desc">Enter your nickname to join the active multiplayer minefield.</p>
+      <form id="nicknameForm">
+        <div class="input-group">
+          <input
+            type="text"
+            id="nicknameInput"
+            class="text-input"
+            placeholder="Your nickname"
+            maxlength="20"
+            autocomplete="off"
+            autofocus
+            required
+          />
+        </div>
+        <div id="nicknameError" class="error-message"></div>
+        <button type="submit" id="joinBtn" class="primary-btn">Play Now</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="roundEndModal" class="modal-backdrop hidden">
+    <div class="modal-card round-end-card">
+      <div id="roundEndIcon" class="round-end-icon">🏆</div>
+      <h2 id="roundEndTitle" class="modal-title">Round Finished</h2>
+      <p id="roundEndSubtitle" class="modal-desc"></p>
+      
+      <div class="round-end-top3">
+        <h3 class="top3-title">Top Players of this Round</h3>
+        <div id="roundEndTop3List" class="champions-list"></div>
+      </div>
+
+      <div class="round-countdown-box">
+        <span>Next round begins in:</span>
+        <strong id="roundEndCountdown" class="countdown-value">10s</strong>
+      </div>
+    </div>
+  </div>
+
+  <div id="reconnectOverlay" class="reconnect-overlay hidden">
+    <div class="reconnect-content">
+      <div class="spinner"></div>
+      <span class="reconnect-text">Connection lost. Reconnecting...</span>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
