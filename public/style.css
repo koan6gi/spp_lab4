@@ -22,6 +22,12 @@
   --num-8: #9ca3af;
 }
 
+@media (max-width: 1024px) {
+  :root {
+    --cell-size: min(30px, calc((100vw - 36px) / 24));
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -76,7 +82,7 @@ body {
   padding: 2px;
 }
 
-@media (hover: none) and (pointer: coarse) {
+@media (hover: none) and (pointer: coarse), (max-width: 1024px) {
   .mode-toggle-group {
     display: flex;
   }
@@ -92,10 +98,16 @@ body {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
+  touch-action: manipulation;
 }
 
-.mode-btn.active {
+.mode-btn#digModeBtn.active {
   background: var(--primary);
+  color: #ffffff;
+}
+
+.mode-btn#flagModeBtn.active {
+  background: var(--danger);
   color: #ffffff;
 }
 
@@ -165,18 +177,24 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 1024px) {
+  .header {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
   .main-content {
     flex-direction: column;
+    padding: 8px;
+    gap: 12px;
   }
 }
 
 .board-wrapper {
   flex: 1;
-  overflow: auto;
-  touch-action: pan-x pan-y;
   background: var(--bg-panel);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -184,17 +202,25 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .board-wrapper {
+    padding: 6px;
+  }
 }
 
 .board {
   display: grid;
   grid-template-columns: repeat(24, var(--cell-size));
   grid-template-rows: repeat(24, var(--cell-size));
-  gap: 2px;
+  gap: 1px;
   background: #111827;
   padding: 4px;
   border-radius: 6px;
+  width: max-content;
+  height: max-content;
 }
 
 .cell {
@@ -204,10 +230,20 @@ body {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.9rem;
-  border-radius: 4px;
+  font-size: calc(var(--cell-size) * 0.58);
+  border-radius: 2px;
   cursor: pointer;
   transition: background-color 0.1s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+  transition: background-color 0.1s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .cell.hidden {

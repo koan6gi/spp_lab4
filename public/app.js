@@ -406,6 +406,53 @@ function connectWebSocket() {
 }
 
 function setupEventListeners() {
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+  let isScrolling = false;
+  let lastTouchHandledTime = 0;
+
+  boardEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+      isScrolling = false;
+    }
+  }, { passive: true });
+
+  boardEl.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1) {
+      const dx = Math.abs(e.touches[0].clientX - touchStartX);
+      const dy = Math.abs(e.touches[0].clientY - touchStartY);
+      if (dx > 8 || dy > 8) {
+        isScrolling = true;
+      }
+    }
+  }, { passive: true });
+
+  boardEl.addEventListener('touchend', (e) => {
+    if (isScrolling) {
+      return;
+    }
+
+    if (Date.now() - touchStartTime > 600) {
+      return;
+    }
+
+    if (e.changedTouches.length > 0) {
+      const touch = e.changedTouches[0];
+      const cellEl = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.cell');
+      if (!cellEl) return;
+
+      const x = parseInt(cellEl.dataset.x, 10);
+      const y = parseInt(cellEl.dataset.y, 10);
+
+      lastTouchHandledTime = Date.now();
+      sendCellAction(x, y, currentTouchMode);
+    }
+  });
+
   boardEl.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     const cellEl = e.target.closest('.cell');
@@ -416,13 +463,16 @@ function setupEventListeners() {
   });
 
   boardEl.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchHandledTime < 500) {
+      return;
+    }
+
     const cellEl = e.target.closest('.cell');
     if (!cellEl) return;
     const x = parseInt(cellEl.dataset.x, 10);
     const y = parseInt(cellEl.dataset.y, 10);
 
-    const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-    const action = isTouchDevice ? currentTouchMode : 'reveal';
+    const action = currentTouchMode || 'reveal';
     sendCellAction(x, y, action);
   });
 
@@ -449,6 +499,7 @@ function setupEventListeners() {
     }
 
     nicknameError.textContent = '';
+    nicknameInput.blur();
     socket.send(JSON.stringify({
       type: 'INIT_USER',
       nickname
