@@ -255,6 +255,10 @@ body {
   background: #283548;
 }
 
+.cell.hidden:active {
+  background: #374151;
+}
+
 .cell.revealed {
   background: #0d131f;
   border: 1px solid #1a2234;

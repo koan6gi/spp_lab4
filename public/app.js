@@ -409,48 +409,47 @@ function setupEventListeners() {
   let touchStartX = 0;
   let touchStartY = 0;
   let touchStartTime = 0;
-  let isScrolling = false;
-  let lastTouchHandledTime = 0;
+  let touchTarget = null;
+  let lastTapTime = 0;
 
   boardEl.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
       touchStartTime = Date.now();
-      isScrolling = false;
-    }
-  }, { passive: true });
-
-  boardEl.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1) {
-      const dx = Math.abs(e.touches[0].clientX - touchStartX);
-      const dy = Math.abs(e.touches[0].clientY - touchStartY);
-      if (dx > 8 || dy > 8) {
-        isScrolling = true;
-      }
+      touchTarget = e.target.closest('.cell');
+    } else {
+      touchTarget = null;
     }
   }, { passive: true });
 
   boardEl.addEventListener('touchend', (e) => {
-    if (isScrolling) {
-      return;
-    }
+    if (!touchTarget) return;
 
-    if (Date.now() - touchStartTime > 600) {
+    const duration = Date.now() - touchStartTime;
+    if (duration > 500) {
+      touchTarget = null;
       return;
     }
 
     if (e.changedTouches.length > 0) {
       const touch = e.changedTouches[0];
-      const cellEl = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.cell');
-      if (!cellEl) return;
+      const dx = Math.abs(touch.clientX - touchStartX);
+      const dy = Math.abs(touch.clientY - touchStartY);
 
-      const x = parseInt(cellEl.dataset.x, 10);
-      const y = parseInt(cellEl.dataset.y, 10);
+      if (dx < 25 && dy < 25) {
+        const cellEl = touchTarget;
+        const x = parseInt(cellEl.dataset.x, 10);
+        const y = parseInt(cellEl.dataset.y, 10);
 
-      lastTouchHandledTime = Date.now();
-      sendCellAction(x, y, currentTouchMode);
+        if (!isNaN(x) && !isNaN(y)) {
+          lastTapTime = Date.now();
+          sendCellAction(x, y, currentTouchMode);
+        }
+      }
     }
+    touchTarget = null;
   });
 
   boardEl.addEventListener('contextmenu', (e) => {
@@ -463,7 +462,7 @@ function setupEventListeners() {
   });
 
   boardEl.addEventListener('click', (e) => {
-    if (Date.now() - lastTouchHandledTime < 500) {
+    if (Date.now() - lastTapTime < 400) {
       return;
     }
 
