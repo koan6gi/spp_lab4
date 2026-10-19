@@ -381,6 +381,7 @@ function connectWebSocket() {
 
       case 'ROUND_STARTED': {
         currentRoundStatus = 'PLAYING';
+        setTouchMode('reveal');
         hideRoundEndModal();
         initLocalGrid();
         startLocalTimer(msg.roundTimeLeft);
@@ -405,87 +406,136 @@ function connectWebSocket() {
   });
 }
 
+function setTouchMode(mode) {
+  currentTouchMode = mode;
+  if (mode === 'reveal') {
+    digModeBtn.classList.add('active');
+    flagModeBtn.classList.remove('active');
+  } else {
+    flagModeBtn.classList.add('active');
+    digModeBtn.classList.remove('active');
+  }
+}
+
+function handleCellActionInput(cellEl, requestedAction) {
+  if (!cellEl) return;
+  const x = parseInt(cellEl.dataset.x, 10);
+  const y = parseInt(cellEl.dataset.y, 10);
+  if (isNaN(x) || isNaN(y)) return;
+
+  sendCellAction(x, y, requestedAction);
+}
+
 function setupEventListeners() {
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchStartTime = 0;
-  let touchTarget = null;
-  let lastTapTime = 0;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let pointerStartTime = 0;
+  let activePointerCell = null;
+  let isLongPress = false;
+  let longPressTimeout = null;
+  let lastActionTimestamp = 0;
 
-  boardEl.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      touchStartTime = Date.now();
-      touchTarget = e.target.closest('.cell');
-    } else {
-      touchTarget = null;
+  boardEl.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary) return;
+
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+
+    pointerStartX = e.clientX;
+    pointerStartY = e.clientY;
+    pointerStartTime = Date.now();
+    activePointerCell = cell;
+    isLongPress = false;
+
+    if (e.pointerType === 'mouse' && e.button === 2) return;
+
+    if (e.pointerType === 'touch') {
+      clearTimeout(longPressTimeout);
+      longPressTimeout = setTimeout(() => {
+        if (activePointerCell && !isLongPress) {
+          isLongPress = true;
+          if (navigator.vibrate) navigator.vibrate(50);
+          lastActionTimestamp = Date.now();
+          handleCellActionInput(activePointerCell, 'flag');
+        }
+      }, 400);
     }
-  }, { passive: true });
+  });
 
-  boardEl.addEventListener('touchend', (e) => {
-    if (!touchTarget) return;
+  boardEl.addEventListener('pointermove', (e) => {
+    if (!activePointerCell) return;
+    const dist = Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY);
+    if (dist > 15) {
+      clearTimeout(longPressTimeout);
+    }
+  });
 
-    const duration = Date.now() - touchStartTime;
-    if (duration > 500) {
-      touchTarget = null;
+  boardEl.addEventListener('pointerup', (e) => {
+    clearTimeout(longPressTimeout);
+    if (!activePointerCell) return;
+
+    if (isLongPress) {
+      activePointerCell = null;
       return;
     }
 
-    if (e.changedTouches.length > 0) {
-      const touch = e.changedTouches[0];
-      const dx = Math.abs(touch.clientX - touchStartX);
-      const dy = Math.abs(touch.clientY - touchStartY);
-
-      if (dx < 25 && dy < 25) {
-        const cellEl = touchTarget;
-        const x = parseInt(cellEl.dataset.x, 10);
-        const y = parseInt(cellEl.dataset.y, 10);
-
-        if (!isNaN(x) && !isNaN(y)) {
-          lastTapTime = Date.now();
-          sendCellAction(x, y, currentTouchMode);
-        }
-      }
+    if (e.pointerType === 'mouse' && e.button === 2) {
+      activePointerCell = null;
+      return;
     }
-    touchTarget = null;
+
+    const dist = Math.hypot(e.clientX - pointerStartX, e.clientY - pointerStartY);
+    const duration = Date.now() - pointerStartTime;
+
+    if (dist < 25 && duration < 600) {
+      const cell = activePointerCell;
+      activePointerCell = null;
+      lastActionTimestamp = Date.now();
+
+      let action = currentTouchMode || 'reveal';
+      if (e.pointerType === 'mouse') {
+        action = (e.button === 2 || currentTouchMode === 'flag') ? 'flag' : 'reveal';
+      }
+      handleCellActionInput(cell, action);
+    } else {
+      activePointerCell = null;
+    }
+  });
+
+  boardEl.addEventListener('pointercancel', () => {
+    clearTimeout(longPressTimeout);
+    activePointerCell = null;
   });
 
   boardEl.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    const cellEl = e.target.closest('.cell');
-    if (!cellEl) return;
-    const x = parseInt(cellEl.dataset.x, 10);
-    const y = parseInt(cellEl.dataset.y, 10);
-    sendCellAction(x, y, 'flag');
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
+    lastActionTimestamp = Date.now();
+    handleCellActionInput(cell, 'flag');
   });
 
   boardEl.addEventListener('click', (e) => {
-    if (Date.now() - lastTapTime < 400) {
-      return;
-    }
-
-    const cellEl = e.target.closest('.cell');
-    if (!cellEl) return;
-    const x = parseInt(cellEl.dataset.x, 10);
-    const y = parseInt(cellEl.dataset.y, 10);
-
+    if (Date.now() - lastActionTimestamp < 350) return;
+    const cell = e.target.closest('.cell');
+    if (!cell) return;
     const action = currentTouchMode || 'reveal';
-    sendCellAction(x, y, action);
+    handleCellActionInput(cell, action);
   });
 
-  digModeBtn.addEventListener('click', () => {
-    currentTouchMode = 'reveal';
-    digModeBtn.classList.add('active');
-    flagModeBtn.classList.remove('active');
-  });
+  const onDigSelect = (e) => {
+    e.preventDefault();
+    setTouchMode('reveal');
+  };
+  digModeBtn.addEventListener('pointerdown', onDigSelect);
+  digModeBtn.addEventListener('click', onDigSelect);
 
-  flagModeBtn.addEventListener('click', () => {
-    currentTouchMode = 'flag';
-    flagModeBtn.classList.add('active');
-    digModeBtn.classList.remove('active');
-  });
+  const onFlagSelect = (e) => {
+    e.preventDefault();
+    setTouchMode('flag');
+  };
+  flagModeBtn.addEventListener('pointerdown', onFlagSelect);
+  flagModeBtn.addEventListener('click', onFlagSelect);
 
   nicknameForm.addEventListener('submit', (e) => {
     e.preventDefault();

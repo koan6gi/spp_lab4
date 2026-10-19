@@ -92,13 +92,16 @@ body {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 6px 12px;
+  padding: 8px 14px;
   font-size: 0.85rem;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .mode-btn#digModeBtn.active {
@@ -222,6 +225,7 @@ body {
   width: max-content;
   height: max-content;
   box-sizing: border-box;
+  touch-action: manipulation;
 }
 
 .cell {
@@ -239,6 +243,7 @@ body {
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
+  -moz-user-select: none;
   box-sizing: border-box;
 }
 
