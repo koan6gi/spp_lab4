@@ -24,7 +24,7 @@
 
 @media (max-width: 1024px) {
   :root {
-    --cell-size: min(30px, calc((100vw - 36px) / 24));
+    --cell-size: min(30px, calc((100vw - 92px) / 24));
   }
 }
 
@@ -207,7 +207,7 @@ body {
 
 @media (max-width: 1024px) {
   .board-wrapper {
-    padding: 6px;
+    padding: 8px;
   }
 }
 
@@ -215,12 +215,13 @@ body {
   display: grid;
   grid-template-columns: repeat(24, var(--cell-size));
   grid-template-rows: repeat(24, var(--cell-size));
-  gap: 1px;
+  gap: 2px;
   background: #111827;
   padding: 4px;
   border-radius: 6px;
   width: max-content;
   height: max-content;
+  box-sizing: border-box;
 }
 
 .cell {
@@ -231,19 +232,14 @@ body {
   justify-content: center;
   font-weight: 700;
   font-size: calc(var(--cell-size) * 0.58);
-  border-radius: 2px;
+  border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.1s ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
-}
-  transition: background-color 0.1s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
+  box-sizing: border-box;
 }
 
 .cell.hidden {
