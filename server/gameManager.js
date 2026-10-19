@@ -267,9 +267,8 @@ class GameManager extends EventEmitter {
           }
         }
 
-        const pointsGained = revealedCells.length;
-        player.score += pointsGained;
-        this.revealedSafeCount += pointsGained;
+        player.score += 1;
+        this.revealedSafeCount += revealedCells.length;
 
         const totalSafeCells = GRID_WIDTH * GRID_HEIGHT - TOTAL_MINES;
         if (this.revealedSafeCount >= totalSafeCells) {
