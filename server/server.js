@@ -234,11 +234,15 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     if (ws.token) {
-      gameManager.setPlayerAfk(ws.token, true);
-      broadcast({
-        type: 'SCORE_UPDATE',
-        currentLeaderboard: gameManager.getLeaderboard()
-      });
+      const player = gameManager.players.get(ws.token);
+      // Only set AFK if this closed socket is still the active one for the player
+      if (player && player.ws === ws) {
+        gameManager.setPlayerAfk(ws.token, true);
+        broadcast({
+          type: 'SCORE_UPDATE',
+          currentLeaderboard: gameManager.getLeaderboard()
+        });
+      }
     }
   });
 });

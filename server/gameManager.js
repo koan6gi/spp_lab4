@@ -231,6 +231,9 @@ class GameManager extends EventEmitter {
 
       cell.version++;
 
+      // Action is accepted, reset AFK status for this active player
+      player.isAfk = false;
+
       if (action === 'reveal') {
         if (cell.isMine) {
           cell.state = 'revealed';
